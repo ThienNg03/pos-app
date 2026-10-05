@@ -1,0 +1,41 @@
+{
+    "name": "pos-app",
+    "version": "1.0.0",
+    "description": "POS bán hàng nhỏ gọn cho doanh nghiệp",
+    "author": "POS App",
+    "private": true,
+    "main": "main.js",
+    "scripts": {
+        "start": "node server.js",
+        "electron": "electron .",
+        "dist": "electron-builder",
+        "package:win": "electron-builder --win portable"
+    },
+    "build": {
+        "appId": "com.posapp.desktop",
+        "productName": "POS App",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "public/**/*",
+            "server.js",
+            "main.js",
+            "package.json",
+            "data/**/*"
+        ],
+        "win": {
+            "target": [
+                "portable"
+            ],
+            "artifactName": "POS-App-${version}.exe"
+        }
+    },
+    "dependencies": {
+        "express": "^4.19.2"
+    },
+    "devDependencies": {
+        "electron": "^32.0.0",
+        "electron-builder": "^25.0.0"
+    }
+}
