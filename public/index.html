@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>POS Bán Hàng</title>
+    <style>
+         :root {
+            --bg: #f4f5f7;
+            --card: #ffffff;
+            --text: #1b1f24;
+            --muted: #6b7280;
+            --accent: #0f766e;
+            --accent-text: #ffffff;
+            --border: #e5e7eb;
+            --soft: #f3f4f6;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        
+        button,
+        input {
+            font: inherit;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .status {
+            font-size: 13px;
+            color: var(--muted);
+        }
+        
+        main {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 12px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px;
+        }
+        
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        
+        .search {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+        }
+        
+        .chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .chip {
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 7px 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .chip.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        .product {
+            border: 1px solid var(--border);
+            background: var(--card);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text);
+        }
+        
+        .product:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        
+        .product .emoji {
+            display: block;
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+        
+        .product .name {
+            display: block;
+            font-weight: 600;
+        }
+        
+        .product .price {
+            display: block;
+            color: var(--accent);
+            margin-top: 4px;
+            font-weight: 700;
+        }
+        
+        .product .stock {
+            display: block;
+            color: var(--muted);
+            margin-top: 2px;
+            font-size: 12px;
+        }
+        
+        .cart {
+            align-self: start;
+            position: sticky;
+            top: 70px;
+        }
+        
+        .cart-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .row .info {
+            flex: 1;
+        }
+        
+        .row .info small {
+            display: block;
+            color: var(--muted);
+        }
+        
+        .qty {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .qty button,
+        .remove-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--soft);
+            color: var(--text);
+            cursor: pointer;
+        }
+        
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        
+        .summary.total {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .discount-input {
+            width: 80px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--accent);
+            color: var(--accent-text);
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .btn.secondary {
+            background: var(--soft);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 20;
+        }
+        
+        .modal.open {
+            display: flex;
+        }
+        
+        .modal-box {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 18px;
+            width: min(380px, 100%);
+            max-height: 90vh;
+            overflow: auto;
+        }
+        
+        .modal-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        
+        .mini-btn {
+            flex: 1;
+            min-width: 90px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            background: var(--soft);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .receipt {
+            font-family: ui-monospace, monospace;
+            font-size: 13px;
+        }
+        
+        .receipt .line {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 24px 0;
+        }
+        
+        @media (max-width: 800px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🧾 POS Bán Hàng</h1>
+        <div class="toolbar">
+            <span class="status" id="stat"></span>
+            <button class="chip" type="button" onclick="manageProducts()">⚙️ Sản phẩm</button>
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <input id="search" class="search" type="text" placeholder="🔍 Tìm sản phẩm..." />
+            <div id="categories" class="chips"></div>
+            <div id="productGrid" class="grid"></div>
+        </section>
+
+        <aside class="panel cart">
+            <span class="cart-title">Đơn hàng</span>
+            <div id="items"></div>
+
+            <div class="summary">
+                <span>Tạm tính</span>
+                <span id="subTotal">0đ</span>
+            </div>
+
+            <div class="summary">
+                <span>Giảm giá (%)</span>
+                <input id="discount" class="discount-input" type="number" min="0" max="100" value="0" />
+            </div>
+
+            <div class="summary total">
+                <span>Tổng</span>
+                <span id="total">0đ</span>
+            </div>
+
+            <button id="payBtn" class="btn" type="button" disabled>Thanh toán</button>
+            <button id="clearBtn" class="btn secondary" type="button">Xóa đơn</button>
+        </aside>
+    </main>
+
+    <div id="modal" class="modal">
+        <div id="modalBox" class="modal-box"></div>
+    </div>
+
+    <script>
+        const state = {
+            products: [],
+            cart: {},
+            currentCategory: 'Tất cả'
+        };
+
+        const el = (id) => document.getElementById(id);
+        const currency = (n) => Math.round(n).toLocaleString('vi-VN') + 'đ';
+        const productById = (id) => state.products.find((p) => String(p.id) === String(id));
+        const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[char]));
+
+        async function api(url, method = 'GET', body) {
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: body ? JSON.stringify(body) : undefined
+            });
+
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || 'Lỗi');
+            return json;
+        }
+
+        function subtotal() {
+            return Object.entries(state.cart).reduce((total, [id, qty]) => {
+                const product = productById(id);
+                return total + (product ? product.price * qty : 0);
+            }, 0);
+        }
+
+        function totalAmount() {
+            const discount = Math.min(100, Math.max(0, Number(el('discount').value || 0)));
+            return subtotal() * (1 - discount / 100);
+        }
+
+        async function loadProducts() {
+            state.products = await api('/api/products');
+            Object.keys(state.cart).forEach((id) => {
+                if (!productById(id)) delete state.cart[id];
+            });
+            renderCategories();
+            renderProducts();
+            renderCart();
+            await loadStats();
+        }
+
+        async function loadStats() {
+            const stats = await api('/api/stats');
+            el('stat').textContent = `${stats.orders} đơn · ${currency(stats.revenue)} hôm nay`;
+        }
+
+        function renderCategories() {
+            const categories = ['Tất cả', ...new Set(state.products.map((p) => p.category))];
+            el('categories').innerHTML = categories
+                .map((category) => `
+						<button
+							type="button"
+							class="chip ${category === state.currentCategory ? 'active' : ''}"
+							onclick="state.currentCategory = '${category}'; renderCategories(); renderProducts();"
+						>
+							${escapeHtml(category)}
+						</button>
+					`)
+                .join('');
+        }
+
+        function renderProducts() {
+            const keyword = el('search').value.trim().toLowerCase();
+            const filtered = state.products.filter((product) => {
+                const matchCategory = state.currentCategory === 'Tất cả' || product.category === state.currentCategory;
+                const matchSearch = product.name.toLowerCase().includes(keyword);
+                return matchCategory && matchSearch;
+            });
+
+            el('productGrid').innerHTML = filtered
+                .map((product) => `
+						<button
+							type="button"
+							class="product"
+							${product.stock <= 0 ? 'disabled' : ''}
+							onclick="addToCart(${product.id})"
+						>
+							<span class="emoji">${escapeHtml(product.emoji)}</span>
+							<span class="name">${escapeHtml(product.name)}</span>
+							<span class="price">${currency(product.price)}</span>
+							<span class="stock">${product.stock > 0 ? `Còn ${product.stock}` : 'Hết hàng'}</span>
+						</button>
+					`)
+					.join('');
+			}
+
+			function addToCart(productId, delta = 1) {
+				const product = productById(productId);
+				if (!product) return;
+
+				const currentQty = state.cart[productId] || 0;
+				const nextQty = currentQty + delta;
+
+				if (delta > 0 && nextQty > product.stock) return;
+				if (nextQty <= 0) delete state.cart[productId];
+				else state.cart[productId] = nextQty;
+
+				renderCart();
+			}
+
+			function renderCart() {
+				const entries = Object.entries(state.cart);
+				el('items').innerHTML = entries.length
+					? entries.map(([id, qty]) => {
+							const product = productById(id);
+							return `
+								<div class="row">
+									<div class="info">
+										<span>${escapeHtml(product.emoji)} ${escapeHtml(product.name)}</span>
+										<small>${currency(product.price)}</small>
+									</div>
+									<div class="qty">
+										<button type="button" onclick="addToCart(${id}, -1)">−</button>
+										<span>${qty}</span>
+										<button type="button" onclick="addToCart(${id}, 1)">+</button>
+									</div>
+									<strong>${currency(product.price * qty)}</strong>
+									<button type="button" class="remove-btn" onclick="addToCart(${id}, -999)">×</button>
+								</div>
+							`;
+						}).join('')
+					: '<div class="empty">Chưa có sản phẩm</div>';
+
+				el('subTotal').textContent = currency(subtotal());
+				el('total').textContent = currency(totalAmount());
+				el('payBtn').disabled = entries.length === 0;
+			}
+
+			function showModal(html) {
+				el('modalBox').innerHTML = html;
+				el('modal').classList.add('open');
+			}
+
+			function hideModal() {
+				el('modal').classList.remove('open');
+			}
+
+			function showPaymentModal() {
+				const total = Math.round(totalAmount());
+				const suggested = [...new Set([
+					total,
+					Math.ceil(total / 50000) * 50000,
+					Math.ceil(total / 100000) * 100000,
+					500000
+				])].filter((x) => x >= total).slice(0, 4);
+
+				showModal(`
+					<h3 style="margin-top:0">Thanh toán</h3>
+					<div class="summary total">
+						<span>Cần thu</span>
+						<span>${currency(total)}</span>
+					</div>
+					<input id="cashInput" type="number" placeholder="Tiền khách đưa" value="${total}" style="width:100%;margin-top:8px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;" />
+					<div class="modal-row">
+						${suggested.map((amount) => `<button class="mini-btn" type="button" onclick="document.getElementById('cashInput').value=${amount}; updateChange()">${currency(amount)}</button>`).join('')}
+					</div>
+					<div class="summary">
+						<span>Tiền thừa</span>
+						<strong id="changeText">0đ</strong>
+					</div>
+					<button class="btn" type="button" onclick="completeSale()">Xác nhận</button>
+					<button class="btn secondary" type="button" onclick="hideModal()">Hủy</button>
+				`);
+
+				el('cashInput').oninput = updateChange;
+				updateChange();
+			}
+
+			function updateChange() {
+				const cash = Number(el('cashInput')?.value || 0);
+				const change = cash - Math.round(totalAmount());
+				el('changeText').textContent = change >= 0 ? currency(change) : 'Chưa đủ';
+			}
+
+			async function completeSale() {
+				try {
+					const receipt = await api('/api/sales', 'POST', {
+						items: Object.entries(state.cart).map(([id, qty]) => ({ id: Number(id), qty })),
+						discount: Number(el('discount').value || 0),
+						cash: Number(el('cashInput').value || 0)
+					});
+
+					showModal(`
+						<h3 style="margin-top:0;text-align:center">Hóa đơn #${receipt.id}</h3>
+						<div class="receipt">
+							<div class="line" style="justify-content:center">${receipt.created_at}</div>
+							<hr />
+							${receipt.items.map((item) => `
+								<div class="line"><span>${escapeHtml(item.name)} x${item.qty}</span><span>${currency(item.price * item.qty)}</span></div>
+							`).join('')}
+							<hr />
+							${receipt.discount ? `<div class="line"><span>Giảm giá</span><span>${receipt.discount}%</span></div>` : ''}
+							<div class="line"><strong>Tổng</strong><strong>${currency(receipt.total)}</strong></div>
+							<div class="line"><span>Khách đưa</span><span>${currency(receipt.cash)}</span></div>
+							<div class="line"><span>Tiền thừa</span><span>${currency(receipt.cash - receipt.total)}</span></div>
+						</div>
+						<button class="btn" type="button" onclick="hideModal(); state.cart = {}; el('discount').value = 0; loadProducts();">Đơn mới</button>
+					`);
+				} catch (error) {
+					alert(error.message);
+				}
+			}
+
+			function manageProducts() {
+				showModal(`
+					<h3 style="margin-top:0">Quản lý sản phẩm</h3>
+					<div class="status">Giá · Tồn kho</div>
+					${state.products.map((product) => `
+						<div class="row">
+							<div class="info">
+								<span>${escapeHtml(product.emoji)} ${escapeHtml(product.name)}</span>
+							</div>
+							<input type="number" value="${product.price}" style="width:90px;padding:8px;border:1px solid var(--border);border-radius:8px;" onchange="updateProduct(${product.id}, { price: +this.value })" />
+							<input type="number" value="${product.stock}" style="width:64px;padding:8px;border:1px solid var(--border);border-radius:8px;" onchange="updateProduct(${product.id}, { stock: +this.value })" />
+							<button type="button" class="remove-btn" onclick="deleteProduct(${product.id})">×</button>
+						</div>
+					`).join('')}
+					<h4>Thêm sản phẩm</h4>
+					<div class="modal-row">
+						<input id="newEmoji" type="text" placeholder="Emoji" style="width:70px;padding:8px;border:1px solid var(--border);border-radius:8px;" />
+						<input id="newName" type="text" placeholder="Tên" style="flex:1;min-width:120px;padding:8px;border:1px solid var(--border);border-radius:8px;" />
+					</div>
+					<div class="modal-row">
+						<input id="newPrice" type="number" placeholder="Giá" style="flex:1;min-width:80px;padding:8px;border:1px solid var(--border);border-radius:8px;" />
+						<input id="newCategory" type="text" placeholder="Danh mục" style="flex:1;min-width:90px;padding:8px;border:1px solid var(--border);border-radius:8px;" />
+						<input id="newStock" type="number" placeholder="Tồn" value="100" style="width:70px;padding:8px;border:1px solid var(--border);border-radius:8px;" />
+					</div>
+					<button class="btn" type="button" onclick="addProduct()">Thêm</button>
+					<button class="btn secondary" type="button" onclick="hideModal()">Đóng</button>
+				`);
+			}
+
+			async function updateProduct(id, patch) {
+				try {
+					await api(`/api/products/${id}`, 'PUT', patch);
+					await loadProducts();
+				} catch (error) {
+					alert(error.message);
+				}
+			}
+
+			async function deleteProduct(id) {
+				if (!confirm('Xóa sản phẩm này?')) return;
+				try {
+					await api(`/api/products/${id}`, 'DELETE');
+					await loadProducts();
+					manageProducts();
+				} catch (error) {
+					alert(error.message);
+				}
+			}
+
+			async function addProduct() {
+				try {
+					await api('/api/products', 'POST', {
+						emoji: el('newEmoji').value,
+						name: el('newName').value,
+						price: Number(el('newPrice').value || 0),
+						category: el('newCategory').value,
+						stock: Number(el('newStock').value || 100)
+					});
+					await loadProducts();
+					manageProducts();
+				} catch (error) {
+					alert(error.message);
+				}
+			}
+
+			el('payBtn').onclick = showPaymentModal;
+			el('clearBtn').onclick = () => {
+				state.cart = {};
+				renderCart();
+			};
+			el('discount').oninput = renderCart;
+			el('search').oninput = renderProducts;
+
+			loadProducts().catch((error) => alert('Không kết nối được server: ' + error.message));
+    </script>
+</body>
+
+</html>
